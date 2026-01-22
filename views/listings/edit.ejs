@@ -1,0 +1,121 @@
+<% layout("/layouts/boilerplate")%>
+<div class="row">
+  <div class="col-8 offset-2">
+    <br />
+    <h3>Edit Listing</h3>
+    <form
+      method="POST"
+      action="/listings/<%=listing._id%>?_method=PUT"
+      class="needs-validation"
+      novalidate
+      enctype="multipart/form-data"
+    >
+      <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input
+          name="listing[title]"
+          value="<%=listing.title%>"
+          type="text"
+          class="form-control"
+          required
+        />
+        <div class="valid-feedback">Looks good!</div>
+        <div class="invalid-feedback">Title is required!</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea name="listing[description]" class="form-control" required>
+<%=listing.description%></textarea
+        >
+        <div class="invalid-feedback">Please enter a short description.</div>
+      </div>
+
+       <% if (listing.images.length) { %>
+        <div class="mb-3">
+          <p class="fw-bold">Current Images</p>
+
+          <div class="row g-3">
+            <% listing.images.forEach(img => { %>
+              <div class="col-md-3 text-center">
+                <img
+                  src="<%= img.url %>"
+                  class="img-fluid rounded mb-2"
+                  style="height: 120px; object-fit: cover;"
+                />
+
+                <!-- DELETE CHECKBOX -->
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="deleteImages[]"
+                    value="<%= img.filename %>"
+                    id="<%= img.filename %>"
+                  />
+                  <label class="form-check-label" for="<%= img.filename %>">
+                    Delete
+                  </label>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- UPLOAD NEW IMAGES -->
+      <div class="mb-3">
+        <label class="form-label">Upload New Images</label>
+        <input
+          name="images"
+          type="file"
+          class="form-control"
+          multiple
+          accept="image/*"
+        />
+      </div>
+
+      <div class="row">
+        <div class="mb-3 col-md-4">
+          <label for="price" class="form-label">Price</label>
+          <input
+            name="listing[price]"
+            value="<%=listing.price%>"
+            type="number"
+            class="form-control"
+            required
+          />
+          <div class="invalid-feedback">Price should be valid.</div>
+        </div>
+
+        <div class="mb-3 col-md-8">
+          <label for="country" class="form-label">Country</label>
+          <input
+            name="listing[country]"
+            value="<%=listing.country%>"
+            type="text"
+            class="form-control"
+            required
+          />
+          <div class="invalid-feedback">Country name should be valid.</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input
+          name="listing[location]"
+          value="<%=listing.location%>"
+          type="text"
+          class="form-control"
+          required
+        />
+        <div class="invalid-feedback">Location should be valid.</div>
+      </div>
+
+      <button class="btn btn-dark Edit-btn">Edit</button>
+      <br />
+    </form>
+    <br />
+  </div>
+</div>
