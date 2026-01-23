@@ -1,23 +1,6 @@
-<style>
-  .btn-search {
-    background-color: #fe424d;
-    color: #fff;
-    border-radius: 25px;
-    padding: 0 1rem;
-  }
-  .btn-search:hover {
-    background-color: #fe424d;
-    color: #fff;
-  }
-  .search-inp {
-    border-radius: 25px;
-    padding: 0.5rem 1.5rem;
-    font-size: 1rem;
-  }
-</style>
-
-<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+<nav class="navbar navbar-expand-md bg-white border-bottom sticky-top py-2">
   <div class="container-fluid">
+
     <!-- Logo -->
     <a class="navbar-brand" href="/listings">
       <i class="fa-regular fa-compass"></i>
@@ -33,20 +16,13 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarNav">
-      
-      <!-- Left links -->
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="/listings">Explore</a>
-        </li>
-      </ul>
+    <!-- Collapsible -->
+    <div class="collapse navbar-collapse mt-3 mt-md-0" id="navbarNav">
 
-      <!-- Search -->
-      <form class="d-flex my-2 my-md-0" action="/listings" method="GET">
+      <!-- Search (TOP on mobile) -->
+      <form class="d-flex w-100 w-md-auto mb-3 mb-md-0 me-md-3" action="/listings" method="GET">
         <input
-          class="form-control me-2 search-inp"
+          class="form-control search-inp me-2"
           type="search"
           name="search"
           placeholder="Search destinations"
@@ -56,8 +32,12 @@
         </button>
       </form>
 
-      <!-- Right links -->
-      <ul class="navbar-nav ms-md-3">
+      <!-- Links -->
+      <ul class="navbar-nav ms-md-auto text-center text-md-start">
+        <li class="nav-item">
+          <a class="nav-link" href="/listings">Explore</a>
+        </li>
+
         <li class="nav-item">
           <a class="nav-link" href="/listings/new">WanderLust your home</a>
         </li>
@@ -75,6 +55,7 @@
           </li>
         <% } %>
       </ul>
+
     </div>
   </div>
 </nav>

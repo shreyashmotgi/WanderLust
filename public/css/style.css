@@ -10,10 +10,40 @@ body {
 }
 
 /* Navbar */
-.navbar {
+.btn-search {
+  background-color: #fe424d;
+  color: #fff;
+  border-radius: 25px;
+  padding: 0 1rem;
+}
+.btn-search:hover {
+  background-color: #fe424d;
+  color: #fff;
+}
+.search-inp {
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .search-inp {
+    width: 100%;
+  }
+
+  .btn-search {
+    padding: 0 0.9rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.7rem 0;
+  }
+}
+
+/* .navbar {
   height: 5rem;
   background-color: white;
-}
+} */
 
 .fa-compass {
   color: #fe424d;
@@ -182,5 +212,5 @@ body {
 
 #map {
   height: 400px;
-  width: 100vh;
+  width: 100%;
 }
