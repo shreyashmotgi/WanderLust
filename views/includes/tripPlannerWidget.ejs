@@ -189,7 +189,17 @@
           body: JSON.stringify({ message }),
         });
         const data = await res.json();
+
         chatWindow.removeChild(loadingBubble);
+
+        if (data.requiresLogin) {
+          addMessage(
+            'Please <a href="/login" style="color:#fe424d;">log in</a> to use the trip planner.',
+            "ai",
+          );
+          return;
+        }
+
         addMessage(data.reply, "ai");
       } catch (err) {
         chatWindow.removeChild(loadingBubble);

@@ -33,6 +33,16 @@ module.exports.chatRateLimiter = async (req, res, next) => {
   }
 };
 
+module.exports.isLoggedinApi = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({
+      reply: "Please log in to use the trip planner.",
+      requiresLogin: true,
+    });
+  }
+  next();
+};
+
 module.exports.isLoggedin = (req, res, next) => {
   if (!req.isAuthenticated()) {
     if (req.originalUrl.includes("/reviews/")) {
