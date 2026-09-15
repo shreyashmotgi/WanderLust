@@ -1,0 +1,61 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-8 offset-lg-2">
+      <h3>Trip Planner</h3>
+      <p class="text-muted">Ask me things like "find me a stay in Goa under 5000 and what's nearby"</p>
+
+      <div id="chat-window" class="border rounded p-3 mb-3" style="height: 400px; overflow-y: auto; background: #fafafa;"></div>
+
+      <form id="chat-form" class="d-flex gap-2">
+        <input type="text" id="chat-input" class="form-control" placeholder="Type your question..." required />
+        <button type="submit" class="btn btn-dark">Send</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const chatWindow = document.getElementById("chat-window");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+
+  function addMessage(text, sender) {
+    const bubble = document.createElement("div");
+    bubble.className = "mb-2 d-flex " + (sender === "user" ? "justify-content-end" : "justify-content-start");
+    bubble.innerHTML = `
+      <div class="p-2 rounded ${sender === "user" ? "bg-dark text-white" : "bg-white border"}" style="max-width: 75%;">
+        ${text}
+      </div>
+    `;
+    chatWindow.appendChild(bubble);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user");
+    chatInput.value = "";
+    addMessage("Thinking...", "ai-loading");
+
+    try {
+      const res = await fetch("/trip-planner/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+
+      // remove the "Thinking..." bubble
+      chatWindow.removeChild(chatWindow.lastChild);
+      addMessage(data.reply, "ai");
+    } catch (err) {
+      chatWindow.removeChild(chatWindow.lastChild);
+      addMessage("Something went wrong. Try again.", "ai");
+    }
+  });
+</script>

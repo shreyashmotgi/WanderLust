@@ -1,0 +1,200 @@
+<!-- Floating Trip Planner widget, bottom-right, available on every page -->
+<div id="tp-widget">
+  <button id="tp-toggle-btn" aria-label="Open trip planner">
+    <i class="fa-solid fa-comment-dots"></i>
+  </button>
+
+  <div id="tp-panel" class="d-none">
+    <div id="tp-header">
+      <span>Trip Planner</span>
+      <button id="tp-reset-btn" title="New conversation">
+        <i class="fa-solid fa-arrow-rotate-left"></i>
+      </button>
+      <button id="tp-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div id="tp-chat-window"></div>
+    <form id="tp-chat-form">
+      <input
+        type="text"
+        id="tp-chat-input"
+        placeholder="Ask about a trip..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<style>
+  #tp-widget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1050;
+    font-family: inherit;
+  }
+  #tp-toggle-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fe424d;
+    color: white;
+    border: none;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+  #tp-panel {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 340px;
+    max-width: 90vw;
+    height: 460px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #tp-header {
+    background: #fe424d;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+  #tp-header > div {
+    display: flex;
+    gap: 8px;
+  }
+  #tp-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  #tp-chat-window {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: #fafafa;
+    font-size: 0.9rem;
+  }
+  #tp-chat-window .tp-msg {
+    margin-bottom: 10px;
+    display: flex;
+  }
+  #tp-chat-window .tp-msg.user {
+    justify-content: flex-end;
+  }
+  #tp-chat-window .tp-bubble {
+    padding: 8px 12px;
+    border-radius: 10px;
+    max-width: 85%;
+  }
+  #tp-chat-window .user .tp-bubble {
+    background: #212529;
+    color: white;
+  }
+  #tp-chat-window .ai .tp-bubble {
+    background: white;
+    border: 1px solid #ddd;
+  }
+  #tp-chat-window .tp-bubble p:last-child {
+    margin-bottom: 0;
+  }
+  #tp-chat-form {
+    display: flex;
+    border-top: 1px solid #eee;
+  }
+  #tp-chat-form input {
+    flex: 1;
+    border: none;
+    padding: 10px 12px;
+    outline: none;
+  }
+  #tp-chat-form button {
+    background: #fe424d;
+    color: white;
+    border: none;
+    padding: 0 16px;
+  }
+</style>
+
+<script>
+  (function () {
+    const toggleBtn = document.getElementById("tp-toggle-btn");
+    const closeBtn = document.getElementById("tp-close-btn");
+    const panel = document.getElementById("tp-panel");
+    const chatWindow = document.getElementById("tp-chat-window");
+    const form = document.getElementById("tp-chat-form");
+    const input = document.getElementById("tp-chat-input");
+
+    toggleBtn.addEventListener("click", () => panel.classList.toggle("d-none"));
+    closeBtn.addEventListener("click", () => panel.classList.add("d-none"));
+
+    document
+      .getElementById("tp-reset-btn")
+      .addEventListener("click", async () => {
+        await fetch("/trip-planner/reset", { method: "POST" });
+        chatWindow.innerHTML = "";
+        addMessage(
+          "Started a new conversation. Where would you like to go?",
+          "ai",
+        );
+      });
+
+    function addMessage(text, sender) {
+      const wrap = document.createElement("div");
+      wrap.className = "tp-msg " + sender;
+      const bubble = document.createElement("div");
+      bubble.className = "tp-bubble";
+
+      if (sender === "ai") {
+        // convert markdown to HTML, then sanitize it -- review text or any
+        // AI output could theoretically contain malicious HTML otherwise
+        bubble.innerHTML = DOMPurify.sanitize(marked.parse(text));
+      } else {
+        // user's own text -- never trust it as HTML, render as plain text
+        bubble.textContent = text;
+      }
+
+      wrap.appendChild(bubble);
+      chatWindow.appendChild(wrap);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return wrap;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      input.value = "";
+      const loadingBubble = addMessage("Thinking...", "ai");
+
+      try {
+        const res = await fetch("/trip-planner/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+        chatWindow.removeChild(loadingBubble);
+        addMessage(data.reply, "ai");
+      } catch (err) {
+        chatWindow.removeChild(loadingBubble);
+        addMessage("Something went wrong. Try again.", "ai");
+      }
+    });
+  })();
+</script>
