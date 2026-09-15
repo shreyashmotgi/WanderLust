@@ -1,7 +1,7 @@
-require("dotenv").config({ path: "../.env" });
+require("dotenv").config();
 
 const mongoose = require("mongoose");
-const initdata = require("./data.js");
+const initdata = require("./moredata.js");
 const Listing = require("../Models/listing.js");
 
 const dbUrl = process.env.ATLASDB_URL;
