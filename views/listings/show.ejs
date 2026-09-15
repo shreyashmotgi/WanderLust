@@ -1,8 +1,11 @@
 <% layout("/layouts/boilerplate") %>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
 <script>
   const mapToken = "<%= process.env.MAP_TOKEN %>";
   const listing = <%- JSON.stringify(listing) %>;
+  const bookings = <%- JSON.stringify(bookings) %>;
 </script>
 
 <div class="container mt-4">
@@ -53,6 +56,19 @@
           <p class="card-text"><%= listing.country %></p>
         </div>
       </div>
+
+      <% if (currUser) { %>
+        <a href="/listings/<%= listing._id %>/book" class="btn btn-dark mt-3">Book Now</a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- AVAILABILITY CALENDAR -->
+  <div class="row mt-4">
+    <div class="col-lg-8 offset-lg-2">
+      <h4>Availability</h4>
+      <div id="availability-calendar"></div>
+      <p class="text-muted small mt-2">Dates marked with a red slash are already booked.</p>
     </div>
   </div>
 
@@ -153,3 +169,50 @@
 </div>
 
 <script src="/js/map.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+  /* diagonal slash on booked dates, since plain grey wasn't visible enough */
+  .flatpickr-day.booked-day {
+    position: relative;
+    color: #999 !important;
+    background: #f3f3f3 !important;
+  }
+  .flatpickr-day.booked-day::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 50%;
+    height: 2px;
+    background: #dc3545;
+    transform: rotate(-45deg);
+  }
+</style>
+<script>
+  // Build a set of individual booked date strings (yyyy-mm-dd) from the
+  // listing's non-cancelled bookings. checkOut is exclusive (guest leaves
+  // that day), so the checkout day itself is NOT marked booked.
+  const bookedDates = new Set();
+  bookings.forEach((b) => {
+    let d = new Date(b.checkIn);
+    const end = new Date(b.checkOut);
+    while (d < end) {
+      bookedDates.add(d.toISOString().slice(0, 10));
+      d.setDate(d.getDate() + 1);
+    }
+  });
+
+  flatpickr("#availability-calendar", {
+    inline: true,
+    showMonths: 1,
+    minDate: "today",
+    disable: [...bookedDates],
+    clickOpens: false, // display-only
+    onDayCreate: function (dObj, dStr, fp, dayElem) {
+      const iso = dayElem.dateObj.toISOString().slice(0, 10);
+      if (bookedDates.has(iso)) {
+        dayElem.classList.add("booked-day");
+      }
+    },
+  });
+</script>

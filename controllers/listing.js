@@ -1,4 +1,5 @@
 const Listing = require("../Models/listing.js");
+const Booking = require("../Models/booking.js");
 const { cloudinary } = require("../cloudConfig.js");
 const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
 const mapToken = process.env.MAP_TOKEN;
@@ -37,7 +38,14 @@ module.exports.showListing = async (req, res) => {
     req.flash("error", "Listing you requested for does not exist!");
     return res.redirect("/listings");
   }
-  res.render("listings/show.ejs", { listing });
+
+  // non-cancelled bookings only -> these are the dates that block new bookings
+  const bookings = await Booking.find({
+    listing: id,
+    status: { $ne: "cancelled" },
+  }).select("checkIn checkOut");
+
+  res.render("listings/show.ejs", { listing, bookings });
 };
 
 module.exports.createListing = async (req, res) => {

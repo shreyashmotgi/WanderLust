@@ -75,6 +75,25 @@
         />
       </div>
 
+      <div class="mb-3">
+        <label class="form-label">Categories</label>
+        <div class="row">
+          <% const allCategories = ["Trending", "Bedrooms", "Iconic cities", "Mountains", "Castles", "Beaches", "Camping", "Farms", "Adventure"]; %>
+          <% allCategories.forEach((cat) => { %>
+          <div class="col-4">
+            <input
+              type="checkbox"
+              name="listing[categories][]"
+              value="<%= cat %>"
+              <% if (listing.categories.includes(cat)) { %>checked<% } %>
+            />
+            <label><%= cat %></label>
+          </div>
+          <% }) %>
+        </div>
+        <div class="invalid-feedback">Please select at least one category.</div>
+      </div>
+
       <div class="row">
         <div class="mb-3 col-md-4">
           <label for="price" class="form-label">Price</label>
