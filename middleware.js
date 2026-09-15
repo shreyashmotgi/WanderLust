@@ -1,7 +1,37 @@
 const ExpressError = require("./utils/ExpressError.js");
-const { listingSchema, reviewSchema } = require("./schema.js");
+const { listingSchema, reviewSchema,bookingSchema } = require("./schema.js");
 const Listing = require("./Models/listing.js");
 const Review = require("./Models/review.js");
+
+const redisClient = require("./redisConfig.js");
+
+// Allows max 8 chat messages per 60 seconds, per logged-in user.
+module.exports.chatRateLimiter = async (req, res, next) => {
+  try {
+    const key = `ratelimit:tripplanner:${req.user._id}`;
+
+    // INCR: create the key at 1 if it doesn't exist, or add 1 if it does
+    const currentCount = await redisClient.incr(key);
+
+    // only set the expiry on the FIRST request in a new window --
+    // otherwise every message would keep resetting the 60s timer
+    if (currentCount === 1) {
+      await redisClient.expire(key, 60);
+    }
+
+    if (currentCount > 8) {
+      return res.status(429).json({
+        reply: "You're sending messages a bit fast — please wait a few seconds and try again.",
+      });
+    }
+
+    next();
+  } catch (err) {
+    // if Redis itself is down, don't block real users -- just log it and let the request through
+    console.error("Rate limiter error:", err.message);
+    next();
+  }
+};
 
 module.exports.isLoggedin = (req, res, next) => {
   if (!req.isAuthenticated()) {
@@ -62,3 +92,13 @@ module.exports.isReviewAuthor = async (req, res, next) => {
   }
   next();
 };
+
+module.exports.validateBooking = (req, res, next) => {
+  let { error } = bookingSchema.validate(req.body);
+  if (error) {
+    let errMsg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(400, errMsg);
+  } else {
+    next();
+  }
+}; 

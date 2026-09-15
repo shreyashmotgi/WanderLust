@@ -1,0 +1,85 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3">
+      <h3><%= booking.listing.title %></h3>
+      <p><%= booking.checkIn.toDateString() %> &rarr; <%= booking.checkOut.toDateString() %></p>
+      <p>Guests: <%= booking.guests %></p>
+      <p class="fw-bold">Total: &#8377;<%= booking.totalPrice.toLocaleString("en-IN") %></p>
+      <span class="badge bg-<%= booking.status === 'confirmed' ? 'success' : booking.status === 'cancelled' ? 'danger' : 'warning' %>">
+        <%= booking.status %>
+      </span>
+
+      <% if (booking.status === "pending") { %>
+        <div class="mt-3">
+          <button id="pay-now-btn" class="btn btn-dark">Pay Now</button>
+          <p id="pay-error" class="text-danger small mt-2 d-none"></p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (booking.status === "pending") { %>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  document.getElementById("pay-now-btn").addEventListener("click", async () => {
+    const errorEl = document.getElementById("pay-error");
+    errorEl.classList.add("d-none");
+
+    try {
+      // Step 1: ask our server to create a Razorpay order for this booking
+      const orderRes = await fetch("/bookings/<%= booking._id %>/create-order", {
+        method: "POST",
+      });
+      const orderData = await orderRes.json();
+
+      if (!orderRes.ok) {
+        throw new Error(orderData.error || "Could not start payment");
+      }
+
+      // Step 2: open Razorpay's Checkout modal with that order
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "WanderLust",
+        description: "<%= booking.listing.title %>",
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          // Step 3: send the payment result back to our server for
+          // signature verification -- this is what actually confirms the booking
+          const verifyRes = await fetch(
+            "/bookings/<%= booking._id %>/verify-payment",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response),
+            }
+          );
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            window.location.reload();
+          } else {
+            errorEl.textContent = "Payment verification failed. Contact support if money was deducted.";
+            errorEl.classList.remove("d-none");
+          }
+        },
+        theme: { color: "#fe424d" },
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on("payment.failed", function (response) {
+        errorEl.textContent = "Payment failed: " + response.error.description;
+        errorEl.classList.remove("d-none");
+      });
+      rzp.open();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove("d-none");
+    }
+  });
+</script>
+<% } %>
