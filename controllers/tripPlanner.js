@@ -1,8 +1,6 @@
 const groq = require("../groqConfig.js");
 const { toolDefinitions, availableFunctions } = require("../utils/tripTools.js");
 
-// same logic as testChat, but reads from POST body instead of a URL query,
-// and returns { reply } to match what chat.ejs expects
 module.exports.chat = async (req, res) => {
   try {
     const userMessage = req.body.message;
