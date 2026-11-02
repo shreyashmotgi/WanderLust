@@ -88,12 +88,14 @@
   <% for(let listing of listings){%>
   <a href="/listings/<%=listing._id%>" class="listing-links">
     <div class="card col listing-card">
-      <img
-        src="<%= listing.images.length ? listing.images[0].url : '' %>"
-        class="card-img-top"
-        style="height: 15rem"
-        alt="listing"
-      />
+    <img
+      src="<%= listing.images.length ? listing.images[0].url : '' %>"
+      class="card-img-top"
+      style="height: 15rem; object-fit: cover"
+      alt="<%= listing.title %>"
+      loading="lazy"
+      decoding="async"
+    />
       <div class="card-img-overlay"></div>
       <div class="card-body">
         <p class="card-text">
@@ -106,6 +108,48 @@
   </a>
   <% } %>
 <% } %>
+
+
+<% if (totalPages > 1) { %>
+  <nav aria-label="Listings pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+
+      <!-- Previous -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="/listings?<%= search ? 'search=' + encodeURIComponent(search) + '&' : '' %><%= category ? 'category=' + encodeURIComponent(category) + '&' : '' %>page=<%= currentPage - 1 %>"
+        >
+          Previous
+        </a>
+      </li>
+
+      <!-- Page numbers -->
+      <% for (let p = 1; p <= totalPages; p++) { %>
+        <li class="page-item <%= currentPage === p ? 'active' : '' %>">
+          <a
+            class="page-link"
+            href="/listings?<%= search ? 'search=' + encodeURIComponent(search) + '&' : '' %><%= category ? 'category=' + encodeURIComponent(category) + '&' : '' %>page=<%= p %>"
+          >
+            <%= p %>
+          </a>
+        </li>
+      <% } %>
+
+      <!-- Next -->
+      <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+        <a
+          class="page-link"
+          href="/listings?<%= search ? 'search=' + encodeURIComponent(search) + '&' : '' %><%= category ? 'category=' + encodeURIComponent(category) + '&' : '' %>page=<%= currentPage + 1 %>"
+        >
+          Next
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+<% } %>
+
 </div>
 
 <script>

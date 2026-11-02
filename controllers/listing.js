@@ -5,25 +5,45 @@ const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
 const mapToken = process.env.MAP_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });
 
+
 module.exports.index = async (req, res) => {
   const { search, category } = req.query;
-  let listings;
+
+  // Pagination settings
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = 12;
+  const skip = (page - 1) * limit;
+
+  // Build the filter
+  let filter = {};
 
   if (search) {
-    listings = await Listing.find({
-      $or: [
-        { title: { $regex: search, $options: "i" } },
-        { location: { $regex: search, $options: "i" } },
-      ],
-    });
+    filter.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { location: { $regex: search, $options: "i" } },
+    ];
   } else if (category) {
-    listings = await Listing.find({ categories: category });
-  } else {
-    listings = await Listing.find({});
+    filter.categories = category;
   }
 
-  res.render("listings/index", { listings, search, category });
+  // Fetch only the listings for this page
+  const listings = await Listing.find(filter)
+    .skip(skip)
+    .limit(limit);
+
+  // Count all matching listings, not just this page
+  const totalListings = await Listing.countDocuments(filter);
+  const totalPages = Math.ceil(totalListings / limit);
+
+  res.render("listings/index", {
+    listings,
+    search,
+    category,
+    currentPage: page,
+    totalPages,
+  });
 };
+
 
 module.exports.rendernewform = (req, res) => {
   res.render("listings/new.ejs");
