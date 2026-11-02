@@ -1,8 +1,6 @@
 const groq = require("../groqConfig.js");
 const { toolDefinitions, availableFunctions } = require("../utils/tripTools.js");
 
-// same logic as testChat, but reads from POST body instead of a URL query,
-// and returns { reply } to match what chat.ejs expects
 module.exports.chat = async (req, res) => {
   try {
     const userMessage = req.body.message;
@@ -39,9 +37,6 @@ module.exports.chat = async (req, res) => {
         messages.push({ role: "assistant", content: finalReply });
         break;
       }
-
-      // only keep the fields the API actually expects back -- avoids
-      // resending any extra SDK-specific fields that might trip validation
       messages.push({
         role: "assistant",
         content: responseMessage.content || null,
@@ -68,8 +63,6 @@ module.exports.chat = async (req, res) => {
 
     res.json({ reply: finalReply || "I wasn't able to complete that request — try rephrasing." });
   } catch (err) {
-    // THIS is the important part -- log the real error server-side so we can
-    // actually see what broke, and always send back valid JSON either way
     console.error("Trip planner chat error:", err);
 
     let userFacingMessage = "Something went wrong on my end — please try again.";
